@@ -1,0 +1,145 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Cyber Farmer</title>
+    <style>
+        :root {
+            --neon-green: #39ff14;
+            --bg-dark: #0a0a0b;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        #stats {
+            margin-top: 20px;
+            font-size: 24px;
+            text-shadow: 0 0 10px var(--neon-green);
+        }
+
+        #farm-area {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        #main-button {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, #222, #000);
+            border: 4px solid var(--neon-green);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.05s;
+            box-shadow: 0 0 20px rgba(57, 255, 20, 0.2);
+            font-size: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #main-button:active {
+            transform: scale(0.95);
+        }
+
+        #shop {
+            background: #1a1a1c;
+            width: 100%;
+            padding: 20px;
+            border-top: 2px solid var(--neon-green);
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .upgrade-btn {
+            background: transparent;
+            border: 1px solid var(--neon-green);
+            color: var(--neon-green);
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .upgrade-btn:disabled {
+            border-color: #444;
+
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="stats">
+        🔋 Энергия: <span id="energy">0</span>
+    </div>
+
+    <div id="farm-area">
+        <div id="main-button">🌱</div>
+    </div>
+
+    <div id="shop">
+        <button class="upgrade-btn" id="buy-drone">
+            Купить Дрона (10 🔋)<br>
+            <small>+1/сек</small>
+        </button>
+
+    </div>
+
+    <script>
+        let energy = 0;
+        let dps = 0; // Data Per Second
+        let dronePrice = 10;
+
+        const energyEl = document.getElementById('energy');
+        const mainBtn = document.getElementById('main-button');
+        const droneBtn = document.getElementById('buy-drone');
+
+        // Клик по грядке
+        mainBtn.addEventListener('click', () => {
+            energy++;
+            updateDisplay();
+        });
+
+        // Покупка дрона
+        droneBtn.addEventListener('click', () => {
+            if (energy >= dronePrice) {
+                energy -= dronePrice;
+                dps += 1;
+                dronePrice = Math.floor(dronePrice * 1.5);
+                droneBtn.innerHTML = `Купить Дрона (${dronePrice} 🔋)<br><small>+1/сек</small>`;
+                updateDisplay();
+            }
+        });
+
+        // Автоматический сбор
+        setInterval(() => {
+            if (dps > 0) {
+                energy += dps;
+                updateDisplay();
+            }
+
+        }, 1000);
+
+        function updateDisplay() {
+            energyEl.innerText = Math.floor(energy);
+            droneBtn.disabled = energy < dronePrice;
+        }
+    </script>
+</body>
+</html>
