@@ -1,235 +1,338 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Cyber Farmer</title>
+    <title>Cyber Farmer Pro</title>
     <style>
         :root {
             --neon-green: #39ff14;
+            --neon-blue: #00f3ff;
             --bg-dark: #0a0a0b;
         }
 
         body {
             background-color: var(--bg-dark);
             color: white;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             height: 100vh;
             margin: 0;
             overflow: hidden;
-            touch-action: manipulation; /* Отключает зум при быстрых тапах */
+            touch-action: manipulation;
         }
 
-        #stats {
-            margin-top: 20px;
-            font-size: 24px;
+        #header {
+            width: 100%;
+            padding: 20px 0;
             text-align: center;
-            text-shadow: 0 0 10px var(--neon-green);
+            background: linear-gradient(to bottom, #111, transparent);
         }
+
+        #energy-display {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--neon-green);
+            text-shadow: 0 0 15px rgba(57, 255, 20, 0.5);
+        }
+
+        .stats-sub {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
 
         #farm-area {
             flex-grow: 1;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             width: 100%;
-            position: relative; /* Нужно для вылетающих цифр */
+            position: relative;
         }
 
         #main-button {
-            width: 200px;
-            height: 200px;
+            width: 220px;
+            height: 220px;
             background: radial-gradient(circle, #222, #000);
-
             border: 4px solid var(--neon-green);
             border-radius: 50%;
             cursor: pointer;
-            transition: transform 0.05s;
-            box-shadow: 0 0 20px rgba(57, 255, 20, 0.2);
-            font-size: 80px;
+            transition: transform 0.05s, box-shadow 0.3s;
+            font-size: 90px;
             display: flex;
             align-items: center;
             justify-content: center;
             user-select: none;
+            box-shadow: 0 0 20px rgba(57, 255, 20, 0.1);
         }
 
         #main-button:active {
-            transform: scale(0.9);
+            transform: scale(0.92);
+        }
+
+        #progress-container {
+            width: 200px;
+            height: 6px;
+            background: #222;
+            border-radius: 3px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
+
+            transition: width 0.3s;
         }
 
         #shop {
             background: #161618;
             width: 100%;
             padding: 20px;
-            border-top: 2px solid var(--neon-green);
+            border-top: 2px solid #333;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
             box-sizing: border-box;
+            max-height: 300px;
+            overflow-y: auto;
         }
 
         .upgrade-btn {
-            background: transparent;
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid #444;
-            color: #888;
-            padding: 15px;
-            border-radius: 10px;
+            color: #ccc;
+            padding: 12px;
+            border-radius: 12px;
             cursor: pointer;
-            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             transition: 0.3s;
         }
 
-        /* Стиль для кнопки, когда на нее хватает денег */
-        .can-afford {
-            border-color: var(--neon-green);
-            color: var(--neon-green);
-            box-shadow: 0 0 10px rgba(57, 255, 20, 0.2);
+        .upgrade-btn.can-afford {
+            border-color: var(--neon-blue);
+            color: white;
+            background: rgba(0, 243, 255, 0.05);
         }
 
-        /* Анимация вылетающих цифр */
+        .upgrade-info b {
+            display: block;
+            font-size: 16px;
+            margin-bottom: 2px;
+        }
+
+        .upgrade-info span {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+
+        .upgrade-price {
+            font-weight: bold;
+            color: var(--neon-green);
+        }
+
         .floating-text {
             position: absolute;
             color: var(--neon-green);
             font-weight: bold;
-            font-size: 24px;
+            font-size: 28px;
             pointer-events: none;
-            animation: floatUp 0.8s ease-out forwards;
+            animation: floatUp 0.7s ease-out forwards;
             z-index: 100;
+            text-shadow: 0 0 5px black;
         }
 
         @keyframes floatUp {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-120px); opacity: 0; }
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-130px) scale(1.2); opacity: 0; }
         }
     </style>
 </head>
 <body>
 
-    <div id="stats">
-        🔋 Энергия: <span id="energy">0</span><br>
-        <small style="font-size: 14px; opacity: 0.7;">Доход: +<span id="dps-val">0</span>/сек</small>
+    <div id="header">
+        <div id="energy-display">0 🔋</div>
+        <div class="stats-sub">
+            Клик: <span id="click-val">1</span> | Доход: <span id="dps-val">0</span>/сек
+        </div>
     </div>
 
     <div id="farm-area">
         <div id="main-button">🌱</div>
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+        <div style="font-size: 12px; margin-top: 8px; color: var(--neon-blue);">
+            До мутации: <span id="next-lvl-name">🌿</span>
+        </div>
     </div>
 
     <div id="shop">
-        <button class="upgrade-btn" id="buy-drone">
-            <b>🤖 Купить Дрона</b><br>
-            Цена: <span id="drone-price">10</span> 🔋 | Прирост: +1/сек
+        <button class="upgrade-btn" id="upgrade-click">
+            <div class="upgrade-info">
+
+                <b>🛠 Инструменты</b>
+                <span>Сила клика +1</span>
+            </div>
+            <div class="upgrade-price" id="click-price">15 🔋</div>
+        </button>
+
+        <button class="upgrade-btn" id="upgrade-drone">
+            <div class="upgrade-info">
+                <b>🤖 Дрон-сборщик</b>
+                <span>Автодоход +1/сек</span>
+            </div>
+            <div class="upgrade-price" id="drone-price">50 🔋</div>
         </button>
     </div>
 
     <script>
-        
-        // --- ПЕРЕМЕННЫЕ СОСТОЯНИЯ ---
-        let energy = 0;
-        let dps = 0;
-        let dronePrice = 10;
-        let level = 1; // Теперь уровень сохраняется
+        // --- СОСТОЯНИЕ ИГРЫ ---
+        let state = {
+            energy: 0,
+            clickPower: 1,
+            baseDps: 0,
+            clickPrice: 15,
+            dronePrice: 50,
+            level: 1
+        };
 
         const crops = ["🌱", "🌿", "☘️", "🌵", "🌴", "🌲", "🍀", "💎"];
 
-        // --- ЭЛЕМЕНТЫ ИНТЕРФЕЙСА ---
-        const energyEl = document.getElementById('energy');
-        const dpsEl = document.getElementById('dps-val');
-        const mainBtn = document.getElementById('main-button');
-        const droneBtn = document.getElementById('buy-drone');
+        // --- ЭЛЕМЕНТЫ ---
+        const energyEl = document.getElementById('energy-display');
+        const clickValEl = document.getElementById('click-val');
+        const dpsValEl = document.getElementById('dps-val');
+        const clickPriceEl = document.getElementById('click-price');
         const dronePriceEl = document.getElementById('drone-price');
+        const mainBtn = document.getElementById('main-button');
+        const progressBar = document.getElementById('progress-bar');
+        const nextLvlName = document.getElementById('next-lvl-name');
+
+        // --- МАТЕМАТИКА БАЛАНСА ---
+        function getNextLevelThreshold(lvl) {
+            // Ур 2: 150, Ур 3: 600, Ур 4: 2400, Ур 5: 9600... (рост в 4 раза)
+            return Math.pow(4, lvl - 1) * 150;
+        }
+
+        function getMultiplier() {
+
+            return Math.pow(2, state.level - 1);
+        }
 
         // --- ЛОГИКА ---
-
         mainBtn.addEventListener('click', (e) => {
-            energy++;
-            createFloatingText(e.clientX, e.clientY);
-            checkEvolution(); // Проверяем уровень при каждом клике
-            updateDisplay();
+            const power = state.clickPower * getMultiplier();
+            state.energy += power;
+            
+            createFloatingText(e.clientX, e.clientY, `+${power}`);
+            checkEvolution();
+            updateUI();
             saveProgress();
         });
 
-        droneBtn.addEventListener('click', () => {
-            if (energy >= dronePrice) {
-                energy -= dronePrice;
-                dps += 1;
-                dronePrice = Math.floor(dronePrice * 1.5);
-                updateDisplay();
+        document.getElementById('upgrade-click').addEventListener('click', () => {
+            if (state.energy >= state.clickPrice) {
+                state.energy -= state.clickPrice;
+                state.clickPower += 1;
+                state.clickPrice = Math.floor(state.clickPrice * 1.8);
+                updateUI();
                 saveProgress();
             }
         });
 
-        function createFloatingText(x, y) {
-            const text = document.createElement('div');
-            text.className = 'floating-text';
-            text.innerText = '+1';
-            text.style.left = (x - 10) + 'px';
-            text.style.top = (y - 20) + 'px';
-            document.body.appendChild(text);
-            setTimeout(() => text.remove(), 800);
-        }
+        document.getElementById('upgrade-drone').addEventListener('click', () => {
+            if (state.energy >= state.dronePrice) {
+                state.energy -= state.dronePrice;
+                state.baseDps += 1;
+                state.dronePrice = Math.floor(state.dronePrice * 1.6);
+                updateUI();
+                saveProgress();
+            }
+        });
 
         function checkEvolution() {
-            // Рассчитываем, какой уровень ДОЛЖЕН БЫТЬ исходя из накопленного максимума
-            // Например: 100 энергии = уровень 2, 300 = уровень 3, 700 = уровень 4...
-            let targetLevel = Math.floor(energy / 100) + 1;
-            if (targetLevel > crops.length) targetLevel = crops.length;
+            if (state.level >= crops.length) return;
             
-            // Если новый рассчитанный уровень выше текущего — повышаем навсегда
-            if (targetLevel > level) {
-                level = targetLevel;
-                // Можно добавить звуковой эффект или вспышку здесь
-                console.log("Эволюция! Уровень: " + level);
+            let threshold = getNextLevelThreshold(state.level + 1);
+            if (state.energy >= threshold) {
+                state.level++;
+                mainBtn.style.transform = "scale(1.2)";
+                setTimeout(() => mainBtn.style.transform = "scale(1)", 200);
             }
         }
 
-        function updateDisplay() {
-            energyEl.innerText = Math.floor(energy);
+        function updateUI() {
+            const mult = getMultiplier();
+            energyEl.innerText = `${Math.floor(state.energy)} 🔋`;
+            clickValEl.innerText = state.clickPower * mult;
+            dpsValEl.innerText = state.baseDps * mult;
             
-            // ГЛАВНАЯ ФИШКА: множитель зависит от уровня
-            // Уровень 1: x1, Уровень 2: x2, Уровень 3: x4, Уровень 4: x8...
-            let multiplier = Math.pow(2, level - 1);
-            let totalDps = dps * multiplier;
+            clickPriceEl.innerText = `${state.clickPrice} 🔋`;
+            dronePriceEl.innerText = `${state.dronePrice} 🔋`;
+
+            // Обновление кнопок
+            document.getElementById('upgrade-click').classList.toggle('can-afford', state.energy >= state.clickPrice);
+            document.getElementById('upgrade-drone').classList.toggle('can-afford', state.energy >= state.dronePrice);
+
+            // Растение и Прогресс-бар
+            mainBtn.innerText = crops[state.level - 1];
             
-            dpsEl.innerText = totalDps + " (x" + multiplier + ")";
-            dronePriceEl.innerText = dronePrice;
-            
-            // Кнопка покупки
-            droneBtn.classList.toggle('can-afford', energy >= dronePrice);
-            
-            // Отображаем текущий росток
-            mainBtn.innerText = crops[level - 1];
+            if (state.level < crops.length) {
+                let nextT = getNextLevelThreshold(state.level + 1);
+                let prevT = getNextLevelThreshold(state.level); // для корректного старта бара с 0
+                if (state.level === 1) prevT = 0;
+                
+                let progress = ((state.energy - prevT) / (nextT - prevT)) * 100;
+                progressBar.style.width = `${Math.min(Math.max(progress, 0), 100)}%`;
+                nextLvlName.innerText = crops[state.level];
+            } else {
+                progressBar.style.width = "100%";
+                nextLvlName.innerText = "MAX";
+            }
         }
 
-        // Авто-сбор
+        function createFloatingText(x, y, val) {
+            const text = document.createElement('div');
+            text.className = 'floating-text';
+            text.innerText = val;
+            text.style.left = `${x - 20}px`;
+            text.style.top = `${y - 40}px`;
+            document.body.appendChild(text);
+            setTimeout(() => text.remove(), 700);
+        }
+
+        // Авто-доход
         setInterval(() => {
-            if (dps > 0) {
-                let multiplier = Math.pow(2, level - 1);
-                energy += (dps * multiplier);
-                updateDisplay();
+            if (state.baseDps > 0) {
+
+                state.energy += (state.baseDps * getMultiplier()) / 10;
+                updateUI();
             }
-        }, 1000);
+        }, 100); // Обновляем 10 раз в секунду для плавности
 
-        // --- СОХРАНЕНИЕ ---
+        // --- SAVE/LOAD ---
         function saveProgress() {
-            const data = { energy, dps, dronePrice, level };
-
-            localStorage.setItem('cyberFarmer_v2', JSON.stringify(data));
+            localStorage.setItem('cyberFarmer_v3', JSON.stringify(state));
         }
 
         function loadProgress() {
-            const saved = localStorage.getItem('cyberFarmer_v2');
+            const saved = localStorage.getItem('cyberFarmer_v3');
             if (saved) {
-                const data = JSON.parse(saved);
-                energy = data.energy || 0;
-                dps = data.dps || 0;
-                dronePrice = data.dronePrice || 10;
-                level = data.level || 1;
-                updateDisplay();
+                state = { ...state, ...JSON.parse(saved) };
             }
+            updateUI();
         }
 
         loadProgress();
