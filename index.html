@@ -18,16 +18,16 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-
             height: 100vh;
             margin: 0;
             overflow: hidden;
-            touch-action: manipulation;
+            touch-action: manipulation; /* Отключает зум при быстрых тапах */
         }
 
         #stats {
             margin-top: 20px;
             font-size: 24px;
+            text-align: center;
             text-shadow: 0 0 10px var(--neon-green);
         }
 
@@ -37,56 +37,81 @@
             align-items: center;
             justify-content: center;
             width: 100%;
+            position: relative; /* Нужно для вылетающих цифр */
         }
 
         #main-button {
             width: 200px;
             height: 200px;
             background: radial-gradient(circle, #222, #000);
+
             border: 4px solid var(--neon-green);
             border-radius: 50%;
             cursor: pointer;
             transition: transform 0.05s;
             box-shadow: 0 0 20px rgba(57, 255, 20, 0.2);
-            font-size: 60px;
+            font-size: 80px;
             display: flex;
             align-items: center;
             justify-content: center;
+            user-select: none;
         }
 
         #main-button:active {
-            transform: scale(0.95);
+            transform: scale(0.9);
         }
 
         #shop {
-            background: #1a1a1c;
+            background: #161618;
             width: 100%;
             padding: 20px;
             border-top: 2px solid var(--neon-green);
             display: flex;
-            justify-content: space-around;
+            flex-direction: column;
+            gap: 10px;
+            box-sizing: border-box;
         }
 
         .upgrade-btn {
             background: transparent;
-            border: 1px solid var(--neon-green);
-            color: var(--neon-green);
-            padding: 10px;
-            border-radius: 5px;
+            border: 1px solid #444;
+            color: #888;
+            padding: 15px;
+            border-radius: 10px;
             cursor: pointer;
+            text-align: left;
+            transition: 0.3s;
         }
 
-        .upgrade-btn:disabled {
-            border-color: #444;
+        /* Стиль для кнопки, когда на нее хватает денег */
+        .can-afford {
+            border-color: var(--neon-green);
+            color: var(--neon-green);
+            box-shadow: 0 0 10px rgba(57, 255, 20, 0.2);
+        }
 
-            color: #444;
+        /* Анимация вылетающих цифр */
+        .floating-text {
+            position: absolute;
+            color: var(--neon-green);
+            font-weight: bold;
+            font-size: 24px;
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
+            z-index: 100;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-120px); opacity: 0; }
         }
     </style>
 </head>
 <body>
 
     <div id="stats">
-        🔋 Энергия: <span id="energy">0</span>
+        🔋 Энергия: <span id="energy">0</span><br>
+        <small style="font-size: 14px; opacity: 0.7;">Доход: +<span id="dps-val">0</span>/сек</small>
     </div>
 
     <div id="farm-area">
@@ -95,82 +120,117 @@
 
     <div id="shop">
         <button class="upgrade-btn" id="buy-drone">
-            Купить Дрона (10 🔋)<br>
-            <small>+1/сек</small>
+            <b>🤖 Купить Дрона</b><br>
+            Цена: <span id="drone-price">10</span> 🔋 | Прирост: +1/сек
         </button>
-
     </div>
 
     <script>
+        // --- ПЕРЕМЕННЫЕ СОСТОЯНИЯ ---
         let energy = 0;
-        let dps = 0; // Data Per Second
+        let dps = 0;
         let dronePrice = 10;
+        let level = 1;
 
+        const crops = ["🌱", "🌿", "☘️", "🌵", "🌴", "🌲", "🍀", "💎"];
+
+        // --- ЭЛЕМЕНТЫ ИНТЕРФЕЙСА ---
         const energyEl = document.getElementById('energy');
+        const dpsEl = document.getElementById('dps-val');
         const mainBtn = document.getElementById('main-button');
         const droneBtn = document.getElementById('buy-drone');
+        const dronePriceEl = document.getElementById('drone-price');
 
-        // Клик по грядке
-        mainBtn.addEventListener('click', () => {
+        // --- ЛОГИКА ---
+
+        // Клик по растению
+        mainBtn.addEventListener('click', (e) => {
             energy++;
+            createFloatingText(e.clientX, e.clientY);
             updateDisplay();
+            saveProgress();
         });
 
-        // Покупка дрона
+        // Покупка апгрейда
         droneBtn.addEventListener('click', () => {
             if (energy >= dronePrice) {
                 energy -= dronePrice;
                 dps += 1;
                 dronePrice = Math.floor(dronePrice * 1.5);
-                droneBtn.innerHTML = `Купить Дрона (${dronePrice} 🔋)<br><small>+1/сек</small>`;
                 updateDisplay();
+                saveProgress();
             }
         });
 
-        // Автоматический сбор
+        // Эффект цифр +1
+        function createFloatingText(x, y) {
+            const text = document.createElement('div');
+            text.className = 'floating-text';
+            text.innerText = '+1';
+            text.style.left = (x - 10) + 'px';
+            text.style.top = (y - 20) + 'px';
+            document.body.appendChild(text);
+
+            setTimeout(() => text.remove(), 800);
+        }
+
+        // Обновление картинок (эволюция)
+        function checkEvolution() {
+            let newLevel = Math.floor(energy / 100) + 1;
+            if (newLevel > crops.length) newLevel = crops.length;
+            
+
+            if (newLevel !== level) {
+                level = newLevel;
+                mainBtn.innerText = crops[level - 1];
+            }
+        }
+
+        // Обновление всего экрана
+        function updateDisplay() {
+            energyEl.innerText = Math.floor(energy);
+            dpsEl.innerText = dps;
+            dronePriceEl.innerText = dronePrice;
+            
+            // Если денег хватает — кнопка яркая
+            if (energy >= dronePrice) {
+                droneBtn.classList.add('can-afford');
+            } else {
+                droneBtn.classList.remove('can-afford');
+            }
+            
+            checkEvolution();
+        }
+
+        // Авто-сбор каждую секунду
         setInterval(() => {
             if (dps > 0) {
                 energy += dps;
                 updateDisplay();
             }
-
         }, 1000);
 
-        function updateDisplay() {
-            energyEl.innerText = Math.floor(energy);
-            droneBtn.disabled = energy < dronePrice;
+        // --- СОХРАНЕНИЕ ---
+        function saveProgress() {
+            const data = { energy, dps, dronePrice };
+            localStorage.setItem('cyberFarmer_v1', JSON.stringify(data));
         }
-        
-// Функция для сохранения данных
-function saveProgress() {
-    const gameData = {
-        energy: energy,
-        dps: dps,
-        dronePrice: dronePrice
-    };
-    localStorage.setItem('cyberFarmerSave', JSON.stringify(gameData));
-}
 
-// Функция для загрузки данных
-function loadProgress() {
-    const savedData = localStorage.getItem('cyberFarmerSave');
-    if (savedData) {
-        const data = JSON.parse(savedData);
-        energy = data.energy;
-        dps = data.dps;
-        dronePrice = data.dronePrice;
-        
-        // Обновляем текст кнопки дрона после загрузки
-        droneBtn.innerHTML = `Купить Дрона (${dronePrice} 🔋)<br><small>+1/сек</small>`;
-        updateDisplay();
-    }
-}
+        function loadProgress() {
+            const saved = localStorage.getItem('cyberFarmer_v1');
+            if (saved) {
+                const data = JSON.parse(saved);
+                energy = data.energy || 0;
+                dps = data.dps || 0;
+                dronePrice = data.dronePrice || 10;
+                updateDisplay();
+            }
 
-// Вызываем загрузку при старте игры
-loadProgress();
+        }
 
-// Сохраняем каждые 5 секунд автоматически
-setInterval(saveProgress, 5000);
+        // Старт
+        loadProgress();
+        setInterval(saveProgress, 5000); // Автосейв каждые 5 сек
 
     </script>
 </body>
