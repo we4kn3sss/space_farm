@@ -126,11 +126,12 @@
     </div>
 
     <script>
+        
         // --- ПЕРЕМЕННЫЕ СОСТОЯНИЯ ---
         let energy = 0;
         let dps = 0;
         let dronePrice = 10;
-        let level = 1;
+        let level = 1; // Теперь уровень сохраняется
 
         const crops = ["🌱", "🌿", "☘️", "🌵", "🌴", "🌲", "🍀", "💎"];
 
@@ -143,15 +144,14 @@
 
         // --- ЛОГИКА ---
 
-        // Клик по растению
         mainBtn.addEventListener('click', (e) => {
             energy++;
             createFloatingText(e.clientX, e.clientY);
+            checkEvolution(); // Проверяем уровень при каждом клике
             updateDisplay();
             saveProgress();
         });
 
-        // Покупка апгрейда
         droneBtn.addEventListener('click', () => {
             if (energy >= dronePrice) {
                 energy -= dronePrice;
@@ -162,7 +162,6 @@
             }
         });
 
-        // Эффект цифр +1
         function createFloatingText(x, y) {
             const text = document.createElement('div');
             text.className = 'floating-text';
@@ -170,68 +169,71 @@
             text.style.left = (x - 10) + 'px';
             text.style.top = (y - 20) + 'px';
             document.body.appendChild(text);
-
             setTimeout(() => text.remove(), 800);
         }
 
-        // Обновление картинок (эволюция)
         function checkEvolution() {
-            let newLevel = Math.floor(energy / 100) + 1;
-            if (newLevel > crops.length) newLevel = crops.length;
+            // Рассчитываем, какой уровень ДОЛЖЕН БЫТЬ исходя из накопленного максимума
+            // Например: 100 энергии = уровень 2, 300 = уровень 3, 700 = уровень 4...
+            let targetLevel = Math.floor(energy / 100) + 1;
+            if (targetLevel > crops.length) targetLevel = crops.length;
             
-
-            if (newLevel !== level) {
-                level = newLevel;
-                mainBtn.innerText = crops[level - 1];
+            // Если новый рассчитанный уровень выше текущего — повышаем навсегда
+            if (targetLevel > level) {
+                level = targetLevel;
+                // Можно добавить звуковой эффект или вспышку здесь
+                console.log("Эволюция! Уровень: " + level);
             }
         }
 
-        // Обновление всего экрана
         function updateDisplay() {
             energyEl.innerText = Math.floor(energy);
-            dpsEl.innerText = dps;
+            
+            // ГЛАВНАЯ ФИШКА: множитель зависит от уровня
+            // Уровень 1: x1, Уровень 2: x2, Уровень 3: x4, Уровень 4: x8...
+            let multiplier = Math.pow(2, level - 1);
+            let totalDps = dps * multiplier;
+            
+            dpsEl.innerText = totalDps + " (x" + multiplier + ")";
             dronePriceEl.innerText = dronePrice;
             
-            // Если денег хватает — кнопка яркая
-            if (energy >= dronePrice) {
-                droneBtn.classList.add('can-afford');
-            } else {
-                droneBtn.classList.remove('can-afford');
-            }
+            // Кнопка покупки
+            droneBtn.classList.toggle('can-afford', energy >= dronePrice);
             
-            checkEvolution();
+            // Отображаем текущий росток
+            mainBtn.innerText = crops[level - 1];
         }
 
-        // Авто-сбор каждую секунду
+        // Авто-сбор
         setInterval(() => {
             if (dps > 0) {
-                energy += dps;
+                let multiplier = Math.pow(2, level - 1);
+                energy += (dps * multiplier);
                 updateDisplay();
             }
         }, 1000);
 
         // --- СОХРАНЕНИЕ ---
         function saveProgress() {
-            const data = { energy, dps, dronePrice };
-            localStorage.setItem('cyberFarmer_v1', JSON.stringify(data));
+            const data = { energy, dps, dronePrice, level };
+
+            localStorage.setItem('cyberFarmer_v2', JSON.stringify(data));
         }
 
         function loadProgress() {
-            const saved = localStorage.getItem('cyberFarmer_v1');
+            const saved = localStorage.getItem('cyberFarmer_v2');
             if (saved) {
                 const data = JSON.parse(saved);
                 energy = data.energy || 0;
                 dps = data.dps || 0;
                 dronePrice = data.dronePrice || 10;
+                level = data.level || 1;
                 updateDisplay();
             }
-
         }
 
-        // Старт
         loadProgress();
-        setInterval(saveProgress, 5000); // Автосейв каждые 5 сек
-
+        setInterval(saveProgress, 5000);
     </script>
 </body>
 </html>
