@@ -1,165 +1,155 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Cyber Farmer: Storm Edition</title>
+    <title>Cyber Farmer: Fixed</title>
     <style>
         :root {
             --neon-green: #39ff14;
             --neon-blue: #00f3ff;
             --neon-gold: #ffcc00;
-            --bg-dark: #0f0c29; /* Глубокий синий/черный */
+            --bg-dark: #0a0a0b;
         }
 
         body {
-            background: radial-gradient(circle at center, #302b63, #0f0c29, #000);
+            background: radial-gradient(circle at center, #1a1a2e, #0a0a0b);
             color: white;
             font-family: 'Segoe UI', sans-serif;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            height: 100vh;
+            height: 100vh; /* Строго на всю высоту экрана */
             margin: 0;
             overflow: hidden;
             touch-action: manipulation;
         }
 
+        /* Шапка всегда сверху */
         #header {
-            width: 100%;
-            padding: 25px 0;
+            padding: 20px 0;
             text-align: center;
-            background: rgba(0,0,0,0.3);
-            backdrop-filter: blur(5px);
-            border-bottom: 1px solid rgba(57, 255, 20, 0.1);
+            background: rgba(0, 0, 0, 0.4);
+            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+            flex-shrink: 0;
         }
 
         #energy-display {
-            font-size: 36px;
+            font-size: 32px;
             font-weight: 900;
             color: var(--neon-green);
-            text-shadow: 0 0 20px rgba(57, 255, 20, 0.6);
+            text-shadow: 0 0 15px rgba(57, 255, 20, 0.5);
         }
 
-        /* АНИМАЦИЯ ТРЯСКИ КНОПКИ */
-        @keyframes clickBump {
-
-            0% { transform: scale(1); }
-            50% { transform: scale(1.15); }
-            100% { transform: scale(1); }
-        }
-
-        .bump {
-            animation: clickBump 0.1s ease-out;
+        /* Центр игры занимает всё свободное место */
+        #farm-area {
+            flex-grow: 1; /* Забирает всё пространство между шапкой и подвалом */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
         }
 
         #main-button {
-            width: 220px;
-            height: 220px;
+            width: 200px;
+            height: 200px;
             background: radial-gradient(circle, #222, #000);
             border: 4px solid var(--neon-green);
             border-radius: 50%;
             cursor: pointer;
-            font-size: 90px;
+            font-size: 80px;
             display: flex;
             align-items: center;
             justify-content: center;
             user-select: none;
             box-shadow: 0 0 30px rgba(57, 255, 20, 0.2);
-            position: relative;
-            z-index: 10;
+            transition: transform 0.05s;
         }
 
-        /* СЛУЧАЙНОЕ СОБЫТИЕ */
-        #event-item {
-            position: absolute;
-            font-size: 50px;
-            cursor: pointer;
-            z-index: 100;
-            filter: drop-shadow(0 0 15px var(--neon-gold));
-            display: none;
-            user-select: none;
-            animation: bounce 2s infinite alternate;
+        /* Анимация при клике */
+        .bump { animation: clickBump 0.1s ease-out; }
+        @keyframes clickBump {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
 
-        @keyframes bounce {
-            from { transform: translateY(0); }
-            to { transform: translateY(-20px); }
-        }
-
-        #storm-indicator {
-            position: fixed;
-
-            top: 100px;
-            background: var(--neon-gold);
-            color: black;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-            display: none;
-            box-shadow: 0 0 20px var(--neon-gold);
-            z-index: 1000;
-        }
-
-        /* МАГАЗИН И ПРОЧЕЕ */
+        /* Магазин всегда прижат к низу */
         #shop {
-            background: rgba(20, 20, 25, 0.9);
-            width: 100%;
+            flex-shrink: 0; /* Не дает магазину сжиматься */
+            background: #161618;
             padding: 20px;
             border-top: 2px solid var(--neon-blue);
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            box-sizing: border-box;
+            gap: 10px;
+            padding-bottom: 30px; /* Запас под полоску внизу iPhone/Android */
         }
 
         .upgrade-btn {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid #444;
             color: #888;
-            padding: 15px;
-            border-radius: 15px;
+            padding: 12px 15px;
+            border-radius: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: 0.3s;
+            font-size: 14px;
         }
 
         .upgrade-btn.can-afford {
             border-color: var(--neon-blue);
             color: white;
+            background: rgba(0, 243, 255, 0.05);
+        }
+
+        #progress-container {
+            width: 180px;
+            height: 8px;
+            background: #222;
+            border-radius: 4px;
+            margin-top: 25px;
+            overflow: hidden;
+            border: 1px solid #333;
         }
 
         #progress-bar {
             width: 0%; height: 100%;
             background: var(--neon-blue);
-            transition: width 0.3s;
+            box-shadow: 0 0 10px var(--neon-blue);
         }
 
-
+        /* Плавающие цифры */
         .floating-text {
             position: absolute;
             color: var(--neon-green);
             font-weight: bold;
-            font-size: 32px;
+            font-size: 24px;
             pointer-events: none;
             animation: floatUp 0.6s ease-out forwards;
         }
 
         @keyframes floatUp {
-            0% { transform: translateY(0) scale(1); opacity: 1; }
-            100% { transform: translateY(-150px) scale(1.5); opacity: 0; }
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-100px); opacity: 0; }
+        }
+
+        #event-item {
+            position: absolute;
+            font-size: 40px;
+            z-index: 100;
+            cursor: pointer;
+            filter: drop-shadow(0 0 10px var(--neon-gold));
+            display: none;
         }
     </style>
 </head>
 <body>
 
-    <div id="storm-indicator">⚡ КИБЕР-ШТОРМ: x5 ДОХОД! ⚡</div>
-
     <div id="header">
         <div id="energy-display">0 🔋</div>
-        <div style="font-size: 14px; opacity: 0.8; margin-top:5px;">
+        <div style="font-size: 13px; opacity: 0.7; margin-top: 4px;">
             Клик: <span id="click-val">1</span> | Доход: <span id="dps-val">0</span>/сек
         </div>
     </div>
@@ -167,76 +157,49 @@
     <div id="farm-area">
         <div id="event-item">📀</div>
         <div id="main-button">🌱</div>
-        <div id="progress-container" style="width:200px; height:6px; background:#222; margin-top:20px; border-radius:3px; overflow:hidden;">
+        <div id="progress-container">
             <div id="progress-bar"></div>
         </div>
-        <div style="font-size: 12px; margin-top: 8px; color: var(--neon-blue);">
-            След. мутация: <span id="next-lvl-name">🌿</span>
+        <div style="font-size: 11px; margin-top: 8px; color: var(--neon-blue); text-transform: uppercase; letter-spacing: 1px;">
+            До мутации: <span id="next-lvl-name">🌿</span>
         </div>
     </div>
 
     <div id="shop">
         <button class="upgrade-btn" id="upgrade-click">
             <div><b>🛠 Инструменты</b><br><small id="c-price">15</small> 🔋</div>
-            <div style="text-align:right">+1 к клику</div>
+            <div style="text-align:right; font-size: 12px;">+1 к силе клика</div>
         </button>
         <button class="upgrade-btn" id="upgrade-drone">
-
-            <div><b>🤖 Дроны</b><br><small id="d-price">50</small> 🔋</div>
-            <div style="text-align:right">+1/сек</div>
+            <div><b>🤖 Кибер-Дрон</b><br><small id="d-price">50</small> 🔋</div>
+            <div style="text-align:right; font-size: 12px;">+1/сек автоматически</div>
         </button>
     </div>
 
     <script>
+        // (Логика остается та же, что и в прошлом коде, 
+        // просто убедись, что переменные и функции совпадают)
         let state = { energy: 0, clickPower: 1, baseDps: 0, clickPrice: 15, dronePrice: 50, level: 1 };
         let eventMultiplier = 1;
         const crops = ["🌱", "🌿", "☘️", "🌵", "🌴", "🌲", "🍀", "💎"];
 
         const mainBtn = document.getElementById('main-button');
         const eventItem = document.getElementById('event-item');
-        const stormInd = document.getElementById('storm-indicator');
 
         function getMultiplier() { return Math.pow(2, state.level - 1) * eventMultiplier; }
 
-        // КЛИК С АНИМАЦИЕЙ
         mainBtn.addEventListener('click', (e) => {
-            state.energy += state.clickPower * getMultiplier();
-            
-            // Тряска
+            const power = state.clickPower * getMultiplier();
+            state.energy += power;
             mainBtn.classList.remove('bump');
-            void mainBtn.offsetWidth; // Магия для перезапуска анимации
+            void mainBtn.offsetWidth;
             mainBtn.classList.add('bump');
-
-            createFloatingText(e.clientX, e.clientY, `+${state.clickPower * getMultiplier()}`);
+            createFloatingText(e.clientX, e.clientY, `+${power}`);
             checkEvolution();
             updateUI();
         });
 
-        // СПЕЦИАЛЬНОЕ СОБЫТИЕ
-        function spawnEvent() {
-            const x = Math.random() * (window.innerWidth - 60);
-            const y = 150 + Math.random() * (window.innerHeight - 400);
-            eventItem.style.left = x + 'px';
-            eventItem.style.top = y + 'px';
-            eventItem.style.display = 'block';
-            
-            setTimeout(() => { eventItem.style.display = 'none'; }, 5000);
-        }
-
-        eventItem.addEventListener('click', () => {
-            eventItem.style.display = 'none';
-            eventMultiplier = 5;
-            stormInd.style.display = 'block';
-
-            setTimeout(() => { 
-                eventMultiplier = 1; 
-                stormInd.style.display = 'none';
-            }, 10000);
-        });
-
-        setInterval(spawnEvent, Math.random() * 30000 + 30000); // Раз в 30-60 сек
-
-        // ОБЫЧНАЯ ЛОГИКА
+        // Покупка клика
         document.getElementById('upgrade-click').addEventListener('click', () => {
             if (state.energy >= state.clickPrice) {
                 state.energy -= state.clickPrice;
@@ -246,6 +209,7 @@
             }
         });
 
+        // Покупка дрона
         document.getElementById('upgrade-drone').addEventListener('click', () => {
             if (state.energy >= state.dronePrice) {
                 state.energy -= state.dronePrice;
@@ -271,31 +235,51 @@
             document.getElementById('d-price').innerText = state.dronePrice;
             mainBtn.innerText = crops[state.level - 1];
             
-            document.getElementById('upgrade-click').classList.toggle('can-afford', state.energy 
-
->= state.clickPrice);
+            document.getElementById('upgrade-click').classList.toggle('can-afford', state.energy >= state.clickPrice);
             document.getElementById('upgrade-drone').classList.toggle('can-afford', state.energy >= state.dronePrice);
 
             let nextT = Math.pow(4, state.level - 1) * 150;
             let progress = (state.energy / nextT) * 100;
             document.getElementById('progress-bar').style.width = Math.min(progress, 100) + '%';
+            if(state.level < crops.length) document.getElementById('next-lvl-name').innerText = crops[state.level];
         }
 
         function createFloatingText(x, y, val) {
             const t = document.createElement('div');
             t.className = 'floating-text';
             t.innerText = val;
-            t.style.left = x + 'px'; t.style.top = y + 'px';
+            t.style.left = (x - 10) + 'px'; 
+            t.style.top = (y - 20) + 'px';
             document.body.appendChild(t);
             setTimeout(() => t.remove(), 600);
         }
 
-        setInterval(() => { state.energy += (state.baseDps * getMultiplier()) / 10; updateUI(); }, 100);
-        
-        // Сохранение (localStorage)
-        setInterval(() => localStorage.setItem('cyberFarmer_v4', JSON.stringify(state)), 5000);
-        const saved = localStorage.getItem('cyberFarmer_v4');
-        if (saved) state = JSON.parse(saved);
+        // Спавн бонуса
+        setInterval(() => {
+            const x = Math.random() * (window.innerWidth - 50);
+            const y = 150 + Math.random() * (window.innerHeight - 400);
+            eventItem.style.left = x + 'px';
+            eventItem.style.top = y + 'px';
+            eventItem.style.display = 'block';
+            setTimeout(() => { eventItem.style.display = 'none'; }, 4000);
+        }, 35000);
+
+        eventItem.addEventListener('click', () => {
+            eventItem.style.display = 'none';
+            eventMultiplier = 5;
+            setTimeout(() => { eventMultiplier = 1; updateUI(); }, 10000);
+            updateUI();
+        });
+
+        setInterval(() => { 
+            state.energy += (state.baseDps * getMultiplier()) / 10; 
+            updateUI(); 
+        }, 100);
+
+        // Сохранение
+        const saved = localStorage.getItem('cyberFarmer_final');
+        if (saved) { state = JSON.parse(saved); updateUI(); }
+        setInterval(() => localStorage.setItem('cyberFarmer_final', JSON.stringify(state)), 5000);
     </script>
 </body>
 </html>
