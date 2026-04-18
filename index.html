@@ -140,6 +140,38 @@
             energyEl.innerText = Math.floor(energy);
             droneBtn.disabled = energy < dronePrice;
         }
+        
+// Функция для сохранения данных
+function saveProgress() {
+    const gameData = {
+        energy: energy,
+        dps: dps,
+        dronePrice: dronePrice
+    };
+    localStorage.setItem('cyberFarmerSave', JSON.stringify(gameData));
+}
+
+// Функция для загрузки данных
+function loadProgress() {
+    const savedData = localStorage.getItem('cyberFarmerSave');
+    if (savedData) {
+        const data = JSON.parse(savedData);
+        energy = data.energy;
+        dps = data.dps;
+        dronePrice = data.dronePrice;
+        
+        // Обновляем текст кнопки дрона после загрузки
+        droneBtn.innerHTML = `Купить Дрона (${dronePrice} 🔋)<br><small>+1/сек</small>`;
+        updateDisplay();
+    }
+}
+
+// Вызываем загрузку при старте игры
+loadProgress();
+
+// Сохраняем каждые 5 секунд автоматически
+setInterval(saveProgress, 5000);
+
     </script>
 </body>
 </html>
