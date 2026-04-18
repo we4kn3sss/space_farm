@@ -1,20 +1,22 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Cyber Farmer Pro</title>
+    <title>Cyber Farmer: Storm Edition</title>
     <style>
         :root {
             --neon-green: #39ff14;
             --neon-blue: #00f3ff;
-            --bg-dark: #0a0a0b;
+            --neon-gold: #ffcc00;
+            --bg-dark: #0f0c29; /* Глубокий синий/черный */
         }
 
         body {
-            background-color: var(--bg-dark);
+            background: radial-gradient(circle at center, #302b63, #0f0c29, #000);
             color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -26,33 +28,30 @@
 
         #header {
             width: 100%;
-            padding: 20px 0;
+            padding: 25px 0;
             text-align: center;
-            background: linear-gradient(to bottom, #111, transparent);
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(5px);
+            border-bottom: 1px solid rgba(57, 255, 20, 0.1);
         }
 
         #energy-display {
-            font-size: 32px;
-            font-weight: bold;
+            font-size: 36px;
+            font-weight: 900;
             color: var(--neon-green);
-            text-shadow: 0 0 15px rgba(57, 255, 20, 0.5);
+            text-shadow: 0 0 20px rgba(57, 255, 20, 0.6);
         }
 
-        .stats-sub {
-            font-size: 14px;
-            opacity: 0.8;
-            margin-top: 5px;
+        /* АНИМАЦИЯ ТРЯСКИ КНОПКИ */
+        @keyframes clickBump {
+
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
         }
 
-
-        #farm-area {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            position: relative;
+        .bump {
+            animation: clickBump 0.1s ease-out;
         }
 
         #main-button {
@@ -62,57 +61,65 @@
             border: 4px solid var(--neon-green);
             border-radius: 50%;
             cursor: pointer;
-            transition: transform 0.05s, box-shadow 0.3s;
             font-size: 90px;
             display: flex;
             align-items: center;
             justify-content: center;
             user-select: none;
-            box-shadow: 0 0 20px rgba(57, 255, 20, 0.1);
+            box-shadow: 0 0 30px rgba(57, 255, 20, 0.2);
+            position: relative;
+            z-index: 10;
         }
 
-        #main-button:active {
-            transform: scale(0.92);
+        /* СЛУЧАЙНОЕ СОБЫТИЕ */
+        #event-item {
+            position: absolute;
+            font-size: 50px;
+            cursor: pointer;
+            z-index: 100;
+            filter: drop-shadow(0 0 15px var(--neon-gold));
+            display: none;
+            user-select: none;
+            animation: bounce 2s infinite alternate;
         }
 
-        #progress-container {
-            width: 200px;
-            height: 6px;
-            background: #222;
-            border-radius: 3px;
-            margin-top: 20px;
-            overflow: hidden;
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-20px); }
         }
 
-        #progress-bar {
-            width: 0%;
-            height: 100%;
-            background: var(--neon-blue);
-            box-shadow: 0 0 10px var(--neon-blue);
+        #storm-indicator {
+            position: fixed;
 
-            transition: width 0.3s;
+            top: 100px;
+            background: var(--neon-gold);
+            color: black;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: none;
+            box-shadow: 0 0 20px var(--neon-gold);
+            z-index: 1000;
         }
 
+        /* МАГАЗИН И ПРОЧЕЕ */
         #shop {
-            background: #161618;
+            background: rgba(20, 20, 25, 0.9);
             width: 100%;
             padding: 20px;
-            border-top: 2px solid #333;
+            border-top: 2px solid var(--neon-blue);
             display: flex;
             flex-direction: column;
             gap: 12px;
             box-sizing: border-box;
-            max-height: 300px;
-            overflow-y: auto;
         }
 
         .upgrade-btn {
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.05);
             border: 1px solid #444;
-            color: #ccc;
-            padding: 12px;
-            border-radius: 12px;
-            cursor: pointer;
+            color: #888;
+            padding: 15px;
+            border-radius: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -122,221 +129,173 @@
         .upgrade-btn.can-afford {
             border-color: var(--neon-blue);
             color: white;
-            background: rgba(0, 243, 255, 0.05);
         }
 
-        .upgrade-info b {
-            display: block;
-            font-size: 16px;
-            margin-bottom: 2px;
+        #progress-bar {
+            width: 0%; height: 100%;
+            background: var(--neon-blue);
+            transition: width 0.3s;
         }
 
-        .upgrade-info span {
-            font-size: 12px;
-            opacity: 0.7;
-        }
-
-
-        .upgrade-price {
-            font-weight: bold;
-            color: var(--neon-green);
-        }
 
         .floating-text {
             position: absolute;
             color: var(--neon-green);
             font-weight: bold;
-            font-size: 28px;
+            font-size: 32px;
             pointer-events: none;
-            animation: floatUp 0.7s ease-out forwards;
-            z-index: 100;
-            text-shadow: 0 0 5px black;
+            animation: floatUp 0.6s ease-out forwards;
         }
 
         @keyframes floatUp {
             0% { transform: translateY(0) scale(1); opacity: 1; }
-            100% { transform: translateY(-130px) scale(1.2); opacity: 0; }
+            100% { transform: translateY(-150px) scale(1.5); opacity: 0; }
         }
     </style>
 </head>
 <body>
 
+    <div id="storm-indicator">⚡ КИБЕР-ШТОРМ: x5 ДОХОД! ⚡</div>
+
     <div id="header">
         <div id="energy-display">0 🔋</div>
-        <div class="stats-sub">
+        <div style="font-size: 14px; opacity: 0.8; margin-top:5px;">
             Клик: <span id="click-val">1</span> | Доход: <span id="dps-val">0</span>/сек
         </div>
     </div>
 
     <div id="farm-area">
+        <div id="event-item">📀</div>
         <div id="main-button">🌱</div>
-        <div id="progress-container">
+        <div id="progress-container" style="width:200px; height:6px; background:#222; margin-top:20px; border-radius:3px; overflow:hidden;">
             <div id="progress-bar"></div>
         </div>
         <div style="font-size: 12px; margin-top: 8px; color: var(--neon-blue);">
-            До мутации: <span id="next-lvl-name">🌿</span>
+            След. мутация: <span id="next-lvl-name">🌿</span>
         </div>
     </div>
 
     <div id="shop">
         <button class="upgrade-btn" id="upgrade-click">
-            <div class="upgrade-info">
-
-                <b>🛠 Инструменты</b>
-                <span>Сила клика +1</span>
-            </div>
-            <div class="upgrade-price" id="click-price">15 🔋</div>
+            <div><b>🛠 Инструменты</b><br><small id="c-price">15</small> 🔋</div>
+            <div style="text-align:right">+1 к клику</div>
         </button>
-
         <button class="upgrade-btn" id="upgrade-drone">
-            <div class="upgrade-info">
-                <b>🤖 Дрон-сборщик</b>
-                <span>Автодоход +1/сек</span>
-            </div>
-            <div class="upgrade-price" id="drone-price">50 🔋</div>
+
+            <div><b>🤖 Дроны</b><br><small id="d-price">50</small> 🔋</div>
+            <div style="text-align:right">+1/сек</div>
         </button>
     </div>
 
     <script>
-        // --- СОСТОЯНИЕ ИГРЫ ---
-        let state = {
-            energy: 0,
-            clickPower: 1,
-            baseDps: 0,
-            clickPrice: 15,
-            dronePrice: 50,
-            level: 1
-        };
-
+        let state = { energy: 0, clickPower: 1, baseDps: 0, clickPrice: 15, dronePrice: 50, level: 1 };
+        let eventMultiplier = 1;
         const crops = ["🌱", "🌿", "☘️", "🌵", "🌴", "🌲", "🍀", "💎"];
 
-        // --- ЭЛЕМЕНТЫ ---
-        const energyEl = document.getElementById('energy-display');
-        const clickValEl = document.getElementById('click-val');
-        const dpsValEl = document.getElementById('dps-val');
-        const clickPriceEl = document.getElementById('click-price');
-        const dronePriceEl = document.getElementById('drone-price');
         const mainBtn = document.getElementById('main-button');
-        const progressBar = document.getElementById('progress-bar');
-        const nextLvlName = document.getElementById('next-lvl-name');
+        const eventItem = document.getElementById('event-item');
+        const stormInd = document.getElementById('storm-indicator');
 
-        // --- МАТЕМАТИКА БАЛАНСА ---
-        function getNextLevelThreshold(lvl) {
-            // Ур 2: 150, Ур 3: 600, Ур 4: 2400, Ур 5: 9600... (рост в 4 раза)
-            return Math.pow(4, lvl - 1) * 150;
-        }
+        function getMultiplier() { return Math.pow(2, state.level - 1) * eventMultiplier; }
 
-        function getMultiplier() {
-
-            return Math.pow(2, state.level - 1);
-        }
-
-        // --- ЛОГИКА ---
+        // КЛИК С АНИМАЦИЕЙ
         mainBtn.addEventListener('click', (e) => {
-            const power = state.clickPower * getMultiplier();
-            state.energy += power;
+            state.energy += state.clickPower * getMultiplier();
             
-            createFloatingText(e.clientX, e.clientY, `+${power}`);
+            // Тряска
+            mainBtn.classList.remove('bump');
+            void mainBtn.offsetWidth; // Магия для перезапуска анимации
+            mainBtn.classList.add('bump');
+
+            createFloatingText(e.clientX, e.clientY, `+${state.clickPower * getMultiplier()}`);
             checkEvolution();
             updateUI();
-            saveProgress();
         });
 
+        // СПЕЦИАЛЬНОЕ СОБЫТИЕ
+        function spawnEvent() {
+            const x = Math.random() * (window.innerWidth - 60);
+            const y = 150 + Math.random() * (window.innerHeight - 400);
+            eventItem.style.left = x + 'px';
+            eventItem.style.top = y + 'px';
+            eventItem.style.display = 'block';
+            
+            setTimeout(() => { eventItem.style.display = 'none'; }, 5000);
+        }
+
+        eventItem.addEventListener('click', () => {
+            eventItem.style.display = 'none';
+            eventMultiplier = 5;
+            stormInd.style.display = 'block';
+
+            setTimeout(() => { 
+                eventMultiplier = 1; 
+                stormInd.style.display = 'none';
+            }, 10000);
+        });
+
+        setInterval(spawnEvent, Math.random() * 30000 + 30000); // Раз в 30-60 сек
+
+        // ОБЫЧНАЯ ЛОГИКА
         document.getElementById('upgrade-click').addEventListener('click', () => {
             if (state.energy >= state.clickPrice) {
                 state.energy -= state.clickPrice;
-                state.clickPower += 1;
+                state.clickPower++;
                 state.clickPrice = Math.floor(state.clickPrice * 1.8);
                 updateUI();
-                saveProgress();
             }
         });
 
         document.getElementById('upgrade-drone').addEventListener('click', () => {
             if (state.energy >= state.dronePrice) {
                 state.energy -= state.dronePrice;
-                state.baseDps += 1;
+                state.baseDps++;
                 state.dronePrice = Math.floor(state.dronePrice * 1.6);
                 updateUI();
-                saveProgress();
             }
         });
 
         function checkEvolution() {
-            if (state.level >= crops.length) return;
-            
-            let threshold = getNextLevelThreshold(state.level + 1);
-            if (state.energy >= threshold) {
+            let nextT = Math.pow(4, state.level - 1) * 150;
+            if (state.energy >= nextT && state.level < crops.length) {
                 state.level++;
-                mainBtn.style.transform = "scale(1.2)";
-                setTimeout(() => mainBtn.style.transform = "scale(1)", 200);
             }
         }
 
         function updateUI() {
-            const mult = getMultiplier();
-            energyEl.innerText = `${Math.floor(state.energy)} 🔋`;
-            clickValEl.innerText = state.clickPower * mult;
-            dpsValEl.innerText = state.baseDps * mult;
-            
-            clickPriceEl.innerText = `${state.clickPrice} 🔋`;
-            dronePriceEl.innerText = `${state.dronePrice} 🔋`;
-
-            // Обновление кнопок
-            document.getElementById('upgrade-click').classList.toggle('can-afford', state.energy >= state.clickPrice);
-            document.getElementById('upgrade-drone').classList.toggle('can-afford', state.energy >= state.dronePrice);
-
-            // Растение и Прогресс-бар
+            const m = getMultiplier();
+            document.getElementById('energy-display').innerText = `${Math.floor(state.energy)} 🔋`;
+            document.getElementById('click-val').innerText = state.clickPower * m;
+            document.getElementById('dps-val').innerText = (state.baseDps * m).toFixed(1);
+            document.getElementById('c-price').innerText = state.clickPrice;
+            document.getElementById('d-price').innerText = state.dronePrice;
             mainBtn.innerText = crops[state.level - 1];
             
-            if (state.level < crops.length) {
-                let nextT = getNextLevelThreshold(state.level + 1);
-                let prevT = getNextLevelThreshold(state.level); // для корректного старта бара с 0
-                if (state.level === 1) prevT = 0;
-                
-                let progress = ((state.energy - prevT) / (nextT - prevT)) * 100;
-                progressBar.style.width = `${Math.min(Math.max(progress, 0), 100)}%`;
-                nextLvlName.innerText = crops[state.level];
-            } else {
-                progressBar.style.width = "100%";
-                nextLvlName.innerText = "MAX";
-            }
+            document.getElementById('upgrade-click').classList.toggle('can-afford', state.energy 
+
+>= state.clickPrice);
+            document.getElementById('upgrade-drone').classList.toggle('can-afford', state.energy >= state.dronePrice);
+
+            let nextT = Math.pow(4, state.level - 1) * 150;
+            let progress = (state.energy / nextT) * 100;
+            document.getElementById('progress-bar').style.width = Math.min(progress, 100) + '%';
         }
 
         function createFloatingText(x, y, val) {
-            const text = document.createElement('div');
-            text.className = 'floating-text';
-            text.innerText = val;
-            text.style.left = `${x - 20}px`;
-            text.style.top = `${y - 40}px`;
-            document.body.appendChild(text);
-            setTimeout(() => text.remove(), 700);
+            const t = document.createElement('div');
+            t.className = 'floating-text';
+            t.innerText = val;
+            t.style.left = x + 'px'; t.style.top = y + 'px';
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 600);
         }
 
-        // Авто-доход
-        setInterval(() => {
-            if (state.baseDps > 0) {
-
-                state.energy += (state.baseDps * getMultiplier()) / 10;
-                updateUI();
-            }
-        }, 100); // Обновляем 10 раз в секунду для плавности
-
-        // --- SAVE/LOAD ---
-        function saveProgress() {
-            localStorage.setItem('cyberFarmer_v3', JSON.stringify(state));
-        }
-
-        function loadProgress() {
-            const saved = localStorage.getItem('cyberFarmer_v3');
-            if (saved) {
-                state = { ...state, ...JSON.parse(saved) };
-            }
-            updateUI();
-        }
-
-        loadProgress();
-        setInterval(saveProgress, 5000);
+        setInterval(() => { state.energy += (state.baseDps * getMultiplier()) / 10; updateUI(); }, 100);
+        
+        // Сохранение (localStorage)
+        setInterval(() => localStorage.setItem('cyberFarmer_v4', JSON.stringify(state)), 5000);
+        const saved = localStorage.getItem('cyberFarmer_v4');
+        if (saved) state = JSON.parse(saved);
     </script>
 </body>
 </html>
